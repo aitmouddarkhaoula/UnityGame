@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
-    public float mSpeed = 20;
-    public float bodySpeed = 10;
-    public int gap = 2;
+    private float mSpeed = 10;
+    private float bodySpeed = 10;
+    private int gap = 4;
     public int force;
     float touchRightVal;
+    [SerializeField] Obstacles _obstacle;
 
     public GameObject BodyPrefab;
 
-    private List<GameObject> _body = new List<GameObject>();
+    public List<GameObject> _body = new List<GameObject>();
     private List<Vector3> _positionsHistory = new List<Vector3>();
 
 
@@ -21,6 +22,7 @@ public class PlayerController : MonoBehaviour {
         Grow();
         Grow();
         Grow();
+        print(_body.Count);
 
     }
 
@@ -28,12 +30,18 @@ public class PlayerController : MonoBehaviour {
     void FixedUpdate() {
 
         transform.position += transform.forward * mSpeed * Time.fixedDeltaTime;
+        if (_body.Count == 0)
+        {
+            GameManager.instance.ShowLoseUI();
+            Time.timeScale = 0;
+            Application.Quit();
 
+        }
         if (Input.GetKey(KeyCode.A))
             {
                 transform.position -= transform.right * Time.fixedDeltaTime * force;
             }
-            if (Input.GetKey(KeyCode.D))
+        if (Input.GetKey(KeyCode.D))
             {
                 transform.position += transform.right * Time.fixedDeltaTime * force;
             }
@@ -69,6 +77,11 @@ public class PlayerController : MonoBehaviour {
             Application.Quit();
         }
     }
+    public void RemoveBall()
+	{
+        Destroy(_body[0].gameObject);
+        _body.RemoveAt(0);
+    }
 #pragma warning disable IDE0051 // Supprimer les membres privés non utilisés
     /*private void OnCollisionEnter(Collision collision)
     {
@@ -83,18 +96,44 @@ public class PlayerController : MonoBehaviour {
      }*/
     private void OnTriggerEnter(Collider other)
     {
+        Obstacle obstacle = other.GetComponent<Obstacle>();
+        int n = obstacle.number;
         if (other.gameObject.tag == "Player")
         {
             Destroy(other.gameObject);
             Grow();
         }
-        else if (other.gameObject.tag == "Enemy")
+    }/*
+        if (other.gameObject.tag == "Enemy" )
         {
-            Destroy(_body[0].gameObject);
-            _body.RemoveAt(0);
-
+            if (_body.Count >= n) {
+                for (int i = 0; i < n; i++)
+                {
+                    Destroy(_body[0].gameObject);
+                    _body.RemoveAt(0);
+                    obstacle.SetNumber(obstacle.number - 1);
+                }
+            }
+            else
+			{
+                for (int i = 0; i < _body.Count+1; i++)
+                {
+                    Destroy(_body[0].gameObject);
+                    _body.RemoveAt(0);
+                    obstacle.SetNumber(obstacle.number - 1);
+                }
+                _body.Clear();
+            }
+            
+            if(obstacle.number == 0)
+			{
+                Destroy(obstacle.gameObject);
+			}
+            
         }
-    }
+
+    }*/
+
     private void Grow() {
         // Instantiate body instance and
         // add it to the list
