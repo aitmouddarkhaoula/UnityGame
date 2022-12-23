@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class Ball : MonoBehaviour
 {
-    public Ball ballPrefab;
-    [SerializeField] PlayerController _snacke;
+    //public GameObject ballPrefab;
+    public PlayerController snake;
+
+    bool _destroy;
     // Start is called before the first frame update
     void Start()
     {
@@ -17,18 +19,33 @@ public class Ball : MonoBehaviour
     {
         
     }
-#pragma warning disable IDE0051
+
     private void OnTriggerEnter(Collider other)
     {
+        if (_destroy)
+            return;
+
         Obstacle obstacle = other.GetComponent<Obstacle>();
         if (other.gameObject.tag == "Enemy")
 		{
-            _snacke.RemoveBall();
-            //Destroy(ballPrefab.gameObject);
+            _destroy = true;
+            snake.RemoveBall(this);
+            //GameManager.instance.DecrementProgress(1 / 10f);
             obstacle.SetNumber(obstacle.number - 1);
+            if (obstacle.number == 0)
+            {
+                Destroy(obstacle.gameObject);
+            }
 
         }
 
 
+    }
+    public void Grow(PlayerController snake)
+    {
+        this.snake = snake;
+        // Instantiate body instance and
+        // add it to the list
+        snake._body.Add(gameObject);
     }
 }

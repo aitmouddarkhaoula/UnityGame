@@ -1,38 +1,48 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviour {
-    private float mSpeed = 10;
-    private float bodySpeed = 10;
-    private int gap = 4;
+    [SerializeField] float mSpeed = 25;
+    [SerializeField] float bodySpeed = 10;
+    [SerializeField] int gap = 2;
+    [SerializeField] int n = 1;
     public int force;
+    public TextMesh count;
     float touchRightVal;
-    [SerializeField] Obstacles _obstacle;
-
+    //[SerializeField] Obstacles _obstacle;
+    [SerializeField] Ball _ball;
     public GameObject BodyPrefab;
 
     public List<GameObject> _body = new List<GameObject>();
     private List<Vector3> _positionsHistory = new List<Vector3>();
 
+    //animation
+   
 
     void Start() {
-        Grow();
-        Grow();
-        Grow();
-        Grow();
-        Grow();
-        print(_body.Count);
+        Snake();
 
     }
+	
 
    
     void FixedUpdate() {
-
+        if(!GameManager.instance.play) {
+            return;
+        }
+        float n = 400f - 21f;
+        float k = transform.position.z - 21f;
+        GameManager.instance.SetProgress(k / n);
+        count.text = _body.Count + "";
         transform.position += transform.forward * mSpeed * Time.fixedDeltaTime;
-        if (_body.Count == 0)
+        
+        if (transform.position.z == 100.1f)
         {
-            GameManager.instance.ShowLoseUI();
+            print("win");
+            GameManager.instance.ShowWinUI();
             Time.timeScale = 0;
             Application.Quit();
 
@@ -70,74 +80,54 @@ public class PlayerController : MonoBehaviour {
 
             index++;
         }
+        if (_body.Count == 0)
+        {
+            GameManager.instance.play = false;
+            GameManager.instance.ShowLoseUI();
+            Time.timeScale = 0;
+            Application.Quit();
 
+        }
         if(transform.position.y < -1)
         {
+            GameManager.instance.ShowLoseUI();
             Time.timeScale = 0;
             Application.Quit();
         }
     }
-    public void RemoveBall()
+    public void RemoveBall(Ball ball)
 	{
-        Destroy(_body[0].gameObject);
-        _body.RemoveAt(0);
+        Destroy(ball.gameObject);
+        _body.Remove(ball.gameObject);
     }
-#pragma warning disable IDE0051 // Supprimer les membres privés non utilisés
-    /*private void OnCollisionEnter(Collision collision)
-    {
-         if (collision.gameObject.tag == "Player")
-         {
-             Destroy(collision.gameObject);
-             Grow();
-
-         }
-
-
-     }*/
     private void OnTriggerEnter(Collider other)
     {
-        Obstacle obstacle = other.GetComponent<Obstacle>();
-        int n = obstacle.number;
+        GameManager.instance.HideGrowUI();
         if (other.gameObject.tag == "Player")
         {
             Destroy(other.gameObject);
-            Grow();
+            Ball ball = Instantiate(this._ball);
+            ball.transform.position = transform.position - Vector3.forward * _body.Count;
+            ball.Grow(this);
+            GameManager.instance.ShowGrowUI();
+            
         }
-    }/*
-        if (other.gameObject.tag == "Enemy" )
+        if (other.gameObject.name == "End")
         {
-            if (_body.Count >= n) {
-                for (int i = 0; i < n; i++)
-                {
-                    Destroy(_body[0].gameObject);
-                    _body.RemoveAt(0);
-                    obstacle.SetNumber(obstacle.number - 1);
-                }
-            }
-            else
-			{
-                for (int i = 0; i < _body.Count+1; i++)
-                {
-                    Destroy(_body[0].gameObject);
-                    _body.RemoveAt(0);
-                    obstacle.SetNumber(obstacle.number - 1);
-                }
-                _body.Clear();
-            }
-            
-            if(obstacle.number == 0)
-			{
-                Destroy(obstacle.gameObject);
-			}
-            
+            print("win");
+            GameManager.instance.ShowWinUI();
+            Time.timeScale = 0;
+            Application.Quit();
+
         }
+    }
+    public void Snake()
+    {
+        for (int i = 0; i < n; i++){
+            Ball ball = Instantiate(this._ball);
+            ball.Grow(this);
+        }
+        
 
-    }*/
-
-    private void Grow() {
-        // Instantiate body instance and
-        // add it to the list
-        GameObject body = Instantiate(BodyPrefab);
-        _body.Add(body);
     }
 }
